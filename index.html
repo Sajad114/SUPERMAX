@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>سوبر ماكس</title>
+		<style>
+				/* الأنماط الأساسية */
+				body {
+						font-family: Arial, sans-serif;
+						direction: rtl;
+						text-align: right;
+						background-color: #f0f0f0;
+						margin: 0;
+						padding: 0;
+				}
+				header {
+						background-color: #333;
+						color: white;
+						padding: 15px;
+						display: flex;
+						justify-content: space-between;
+						align-items: center;
+						box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+				}
+				header h1 {
+						margin: 0;
+				}
+				main {
+						padding: 20px;
+				}
+				#settingsBtn, #posBtn {
+						padding: 10px 20px;
+						background-color: #007BFF;
+						color: white;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						box-shadow: 6px 6px 12px #b0b0b0, -6px -6px 12px #ffffff;
+				}
+				#settingsBtn:hover, #posBtn:hover {
+						background-color: #0056b3;
+				}
+				.hidden {
+						display: none;
+				}
+				#popup, #posPopup {
+						position: fixed;
+						top: 50%;
+						left: 50%;
+						transform: translate(-50%, -50%);
+						background-color: white;
+						border: 1px solid #ccc;
+						padding: 20px;
+						z-index: 1000;
+						box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+						border-radius: 10px;
+						box-shadow: 6px 6px 12px #b0b0b0, -6px -6px 12px #ffffff;
+				}
+				#popup h2, #posPopup h2 {
+						margin-top: 0;
+				}
+				#sections button {
+						margin: 5px;
+						padding: 10px;
+						background-color: #007BFF;
+						color: white;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						box-shadow: 6px 6px 12px #b0b0b0, -6px -6px 12px #ffffff;
+				}
+				#sections button:hover {
+						background-color: #0056b3;
+				}
+				.section {
+						display: none;
+				}
+				.section.active {
+						display: block;
+				}
+				.dark-mode {
+						background-color: #333;
+						color: white;
+				}
+				.card {
+						background: #f0f0f0;
+						border-radius: 15px;
+						padding: 20px;
+						margin: 10px 0;
+						box-shadow: 6px 6px 12px #b0b0b0, -6px -6px 12px #ffffff;
+				}
+				.card button {
+						padding: 10px;
+						margin: 5px;
+						background-color: #007BFF;
+						color: white;
+						border: none;
+						border-radius: 5px;
+						cursor: pointer;
+						box-shadow: 6px 6px 12px #b0b0b0, -6px -6px 12px #ffffff;
+				}
+				.card button:hover {
+						background-color: #0056b3;
+				}
+		</style>
+</head>
+<body>
+		<header>
+				<h1>سوبر ماكس</h1>
+				<button id="settingsBtn">الإعدادات</button>
+		</header>
+		<main>
+				<div id="mainContent">
+						<h2>تقرير مالي</h2>
+						<p>عدد الطلبات: <span id="orderCount">0</span></p>
+						<p>المبلغ الإجمالي: <span id="totalAmount">0</span> <span id="currencyLabel">IQR</span></p>
+						<p>عدد الطلبات الواصل: <span id="deliveredCount">0</span></p>
+						<p>إجمالي المبلغ الواصل: <span id="deliveredAmount">0</span> <span id="currencyLabel">IQR</span></p>
+						<p>عدد الطلبات الراجع: <span id="returnedCount">0</span></p>
+						<p>إجمالي المبلغ الراجع: <span id="returnedAmount">0</span> <span id="currencyLabel">IQR</span></p>
+						<p>إجمالي أجرة التوصيل للطلبيات الواصل: <span id="totalDeliveryFee">0</span> <span id="currencyLabel">IQR</span></p>
+						<button id="posBtn">إضافة طلب جديد (POS)</button>
+				</div>
+
+				<!-- قسم البحث -->
+				<div>
+						<input type="text" id="searchInput" placeholder="ابحث عن الطلبات...">
+						<button id="searchBtn">بحث</button>
+				</div>
+
+				<div id="sections">
+						<button onclick="showSection('orderPlaced')">تم الطلب</button>
+						<button onclick="showSection('orderPrepared')">تم التجهيز</button>
+						<button onclick="showSection('orderDelivered')">تم التوصيل</button>
+						<button onclick="showSection('orderReturned')">مرتجع</button>
+						<button onclick="showSection('reports')">التقارير</button>
+				</div>
+
+
+				<div id="orderPlaced" class="section">
+						<h3>تم الطلب</h3>
+						<div id="orderPlacedList"></div>
+				</div>
+				<div id="orderPrepared" class="section">
+						<h3>تم التجهيز</h3>
+						<div id="orderPreparedList"></div>
+				</div>
+				<div id="orderDelivered" class="section">
+						<h3>تم التوصيل</h3>
+						<div id="orderDeliveredList"></div>
+				</div>
+				<div id="orderReturned" class="section">
+						<h3>مرتجع</h3>
+						<div id="orderReturnedList"></div>
+				</div>
+				<div id="reports" class="section">
+						<h3>التقارير</h3>
+						<p>عدد الطلبات: <span id="totalOrders">0</span></p>
+						<p>المبلغ الإجمالي: <span id="totalRevenue">0</span> <span id="currencyLabelReports">IQR</span></p>
+				</div>
+		</main>
+
+		<div id="popup" class="hidden">
+				<h2>الإعدادات</h2>
+				<label for="theme">تغيير المظهر:</label>
+				<select id="theme">
+						<option value="light">فاتح</option>
+						<option value="dark">داكن</option>
+				</select>
+				<br><br>
+				<label for="currency">تخصيص العملة:</label>
+				<select id="currency">
+						<option value="IQR">IQR</option>
+						<option value="دولار">دولار</option>
+						<option value="يورو">يورو</option>
+				</select>
+				<br><br>
+				<label for="deliveryPerson">إضافة مندوب:</label>
+				<input type="text" id="deliveryPerson">
+				<br><br>
+				<button id="saveBtn">حفظ</button>
+		</div>
+
+		<div id="posPopup" class="hidden">
+				<h2>إضافة طلب جديد</h2>
+				<label for="orderId">رقم الطلب:</label>
+				<input type="text" id="orderId">
+				<br><br>
+				<label for="customerName">اسم الزبون:</label>
+				<input type="text" id="customerName">
+				<br><br>
+				<label for="customerNumber">رقم الزبون:</label>
+				<input type="text" id="customerNumber">
+				<br><br>
+				<label for="productType">نوع المنتج:</label>
+				<input type="text" id="productType">
+				<br><br>
+				<label for="productPrice">السعر:</label>
+				<input type="text" id="productPrice">
+				<br><br>
+				<label for="deliveryFee">أجرة التوصيل:</label>
+				<input type="text" id="deliveryFee">
+				<br><br>
+				<label for="deliveryPersonSelect">اختر المندوب:</label>
+				<select id="deliveryPersonSelect">
+											 <!-- الخيارات سيتم تحديثها بواسطة الجافاسكربت -->
+				</select>
+				<br><br>
+				<button id="addOrderBtn">إضافة الطلب</button>
+		</div>
+
+		<script>
+				// الحصول على العناصر بواسطة المعرفات
+const settingsBtn = document.getElementById('settingsBtn');
+const popup = document.getElementById('popup');
+const saveBtn = document.getElementById('saveBtn');
+const posBtn = document.getElementById('posBtn');
+const posPopup = document.getElementById('posPopup');
+const addOrderBtn = document.getElementById('addOrderBtn');
+const sections = document.getElementById('sections');
+const themeSelect = document.getElementById('theme');
+const currencySelect = document.getElementById('currency');
+const deliveryPersonInput = document.getElementById('deliveryPerson');
+const deliveryPersonSelect = document.getElementById('deliveryPersonSelect');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+
+let currentSection = '';
+let orders = JSON.parse(localStorage.getItem('orders')) || [];
+let deliveryPersons = JSON.parse(localStorage.getItem('deliveryPersons')) || [];
+
+// فتح نافذة الإعدادات
+settingsBtn.addEventListener('click', () => {
+		popup.classList.remove('hidden');
+});
+
+// حفظ إعدادات الإعدادات
+saveBtn.addEventListener('click', () => {
+		const currency = currencySelect.value;
+		document.querySelectorAll('#currencyLabel, #currencyLabelReports').forEach(label => {
+				label.textContent = currency;
+		});
+
+		const theme = themeSelect.value;
+		if (theme === 'dark') {
+				document.body.classList.add('dark-mode');
+		} else {
+				document.body.classList.remove('dark-mode');
+		}
+
+		const newDeliveryPerson = deliveryPersonInput.value;
+		if (newDeliveryPerson && !deliveryPersons.includes(newDeliveryPerson)) {
+				deliveryPersons.push(newDeliveryPerson);
+				localStorage.setItem('deliveryPersons', JSON.stringify(deliveryPersons));
+				updateDeliveryPersonSelect();
+		}
+
+		popup.classList.add('hidden');
+});
+
+// فتح نافذة إضافة الطلب
+posBtn.addEventListener('click', () => {
+		posPopup.classList.remove('hidden');
+});
+
+// إضافة طلب جديد
+addOrderBtn.addEventListener('click', () => {
+		const orderId = document.getElementById('orderId').value;
+		const customerName = document.getElementById('customerName').value;
+		const customerNumber = document.getElementById('customerNumber').value;
+		const productType = document.getElementById('productType').value;
+		const productPrice = parseFloat(document.getElementById('productPrice').value);
+		const deliveryFee = parseFloat(document.getElementById('deliveryFee').value);
+		const deliveryPerson = deliveryPersonSelect.value;
+
+		if (orderId && customerName && customerNumber && productType && !isNaN(productPrice) && deliveryPerson && !isNaN(deliveryFee)) {
+				const newOrder = {
+						orderId,
+						customerName,
+						customerNumber,
+						productType,
+						productPrice,
+						deliveryFee,
+						deliveryPerson,
+						status: 'orderPlaced'
+				};
+
+				orders.push(newOrder);
+				localStorage.setItem('orders', JSON.stringify(orders));
+				updateOrderList();
+				updateReport();
+
+				posPopup.classList.add('hidden');
+				clearPOSForm();
+		} else {
+				alert('يرجى ملء جميع الحقول بشكل صحيح');
+		}
+});
+
+// البحث عن الطلبات
+searchBtn.addEventListener('click', () => {
+		const query = searchInput.value.toLowerCase();
+		const filteredOrders = orders.filter(order => 
+				order.orderId.toLowerCase().includes(query) ||
+				order.customerName.toLowerCase().includes(query) ||
+				order.customerNumber.toLowerCase().includes(query) ||
+				order.productType.toLowerCase().includes(query) ||
+				order.deliveryPerson.toLowerCase().includes(query)
+		);
+		updateOrderList(filteredOrders);
+});
+
+function showSection(section) {
+		const allSections = ['orderPlaced', 'orderPrepared', 'orderDelivered', 'orderReturned', 'reports'];
+		allSections.forEach(s => {
+				const el = document.getElementById(s);
+				if (s === section) {
+						el.style.display = 'block';
+						currentSection = section;
+				} else {
+						el.style.display = 'none';
+				}
+		});
+}
+
+function updateOrderList(ordersToDisplay = orders) {
+		const orderPlacedList = document.getElementById('orderPlacedList');
+		const orderPreparedList = document.getElementById('orderPreparedList');
+		const orderDeliveredList = document.getElementById('orderDeliveredList');
+		const orderReturnedList = document.getElementById('orderReturnedList');
+
+		orderPlacedList.innerHTML = '';
+		orderPreparedList.innerHTML = '';
+		orderDeliveredList.innerHTML = '';
+		orderReturnedList.innerHTML = '';
+
+		ordersToDisplay.forEach(order => {
+				const card = document.createElement('div');
+				card.className = 'card';
+				card.innerHTML = `
+						<p>رقم الطلب: ${order.orderId}</p>
+						<p>اسم الزبون: ${order.customerName}</p>
+						<p>رقم الزبون: ${order.customerNumber}</p>
+						<p>نوع المنتج: ${order.productType}</p>
+						<p>السعر: ${order.productPrice.toFixed(2)} <span id="currencyLabel">${currencySelect.value}</span></p>
+						<p>أجرة التوصيل: ${order.deliveryFee.toFixed(2)} <span id="currencyLabel">${currencySelect.value}</span></p>
+						<p>المندوب: ${order.deliveryPerson}</p>
+				`;
+				card.appendChild(createOrderActions(order));
+				if (order.status === 'orderPlaced') {
+						orderPlacedList.appendChild(card);
+				} else if (order.status === 'orderPrepared') {
+						orderPreparedList.appendChild(card);
+				} else if (order.status === 'orderDelivered') {
+						orderDeliveredList.appendChild(card);
+				} else if (order.status === 'orderReturned') {
+						orderReturnedList.appendChild(card);
+				}
+		});
+}
+
+function createOrderActions(order) {
+		const actions = document.createElement('div');
+		actions.style.marginTop = '10px';
+
+		const prepareBtn = document.createElement('button');
+		prepareBtn.textContent = 'تجهيز';
+		prepareBtn.addEventListener('click', () => {
+				order.status = 'orderPrepared';
+				localStorage.setItem('orders', JSON.stringify(orders));
+				updateOrderList();
+		});
+
+		const deliverBtn = document.createElement('button');
+		deliverBtn.textContent = 'توصيل';
+		deliverBtn.addEventListener('click', () => {
+				order.status = 'orderDelivered';
+				localStorage.setItem('orders', JSON.stringify(orders));
+				updateOrderList();
+				updateReport();
+		});
+
+		const returnBtn = document.createElement('button');
+		returnBtn.textContent = 'مرتجع';
+		returnBtn.addEventListener('click', () => {
+				order.status = 'orderReturned';
+				localStorage.setItem('orders', JSON.stringify(orders));
+				updateOrderList();
+				updateReport();
+		});
+
+		const deleteBtn = document.createElement('button');
+		deleteBtn.textContent = 'حذف';
+		deleteBtn.addEventListener('click', () => {
+				orders = orders.filter(o => o.orderId !== order.orderId);
+				localStorage.setItem('orders', JSON.stringify(orders));
+				updateOrderList();
+				updateReport();
+		});
+
+		actions.appendChild(prepareBtn);
+		actions.appendChild(deliverBtn);
+		actions.appendChild(returnBtn);
+		actions.appendChild(deleteBtn);
+
+		return actions;
+}
+
+function updateReport() {
+		const orderCount = orders.length;
+		const totalAmount = orders.reduce((sum, order) => sum + parseFloat(order.productPrice), 0);
+		const deliveredOrders = orders.filter(order => order.status === 'orderDelivered');
+		const deliveredCount = deliveredOrders.length;
+		const deliveredAmount = deliveredOrders.reduce((sum, order) => sum + parseFloat(order.productPrice), 0);
+		const totalDeliveryFee = deliveredOrders.reduce((sum, order) => sum + parseFloat(order.deliveryFee), 0);
+
+		const returnedOrders = orders.filter(order => order.status === 'orderReturned');
+		const returnedCount = returnedOrders.length;
+		const returnedAmount = returnedOrders.reduce((sum, order) => sum + parseFloat(order.productPrice), 0);
+
+		document.getElementById('orderCount').textContent = orderCount;
+		document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+		document.getElementById('deliveredCount').textContent = deliveredCount;
+		document.getElementById('deliveredAmount').textContent = deliveredAmount.toFixed(2);
+		document.getElementById('totalDeliveryFee').textContent = totalDeliveryFee.toFixed(2);
+		document.getElementById('returnedCount').textContent = returnedCount;
+		document.getElementById('returnedAmount').textContent = returnedAmount.toFixed(2);
+
+		document.getElementById('totalOrders').textContent = orderCount;
+		document.getElementById('totalRevenue').textContent = totalAmount.toFixed(2);
+}
+
+function updateDeliveryPersonSelect() {
+		deliveryPersonSelect.innerHTML = '';
+		deliveryPersons.forEach(person => {
+				const option = document.createElement('option');
+				option.value = person;
+				option.textContent = person;
+				deliveryPersonSelect.appendChild(option);
+		});
+}
+
+function clearPOSForm() {
+		document.getElementById('orderId').value = '';
+		document.getElementById('customerName').value = '';
+		document.getElementById('customerNumber').value = '';
+		document    .getElementById('productType').value = '';
+		document.getElementById('productPrice').value = '';
+		document.getElementById('deliveryFee').value = '';
+		deliveryPersonSelect.value = '';
+}
+
+// عرض القسم الافتراضي عند تحميل الصفحة
+showSection('orderPlaced');
+updateOrderList();
+updateReport();
+updateDeliveryPersonSelect();
+		</script>
+</body>
+</html>
